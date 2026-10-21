@@ -22,7 +22,3 @@ bun run dev
 | `bun run preview` | Sirve el build local              |
 | `bun run check`   | Chequeo de tipos y Svelte         |
 | `bun run test`    | Tests del cifrado                 |
-
-## Despliegue
-
-Cada push a `main` ejecuta `.github/workflows/deploy.yml`: instala, chequea, testea, compila y publica en GitHub Pages.
