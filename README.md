@@ -4,7 +4,7 @@ https://chocek-rb.github.io/dct/
 
 ## Uso
 
-1. Escribe el mensaje (solo A–Z; el resto se normaliza) y las dos claves (2–16 letras).
+1. Escribe el mensaje (se conserva tal cual: mayúsculas, espacios, tildes y signos; sin saltos de línea) y las dos claves (2–16 caracteres, también tal cual: mayúsculas, minúsculas, espacios, tildes y signos; sin saltos de línea).
 2. Pulsa **Ejecutar cifrado** o `Ctrl + Enter`.
 3. Avanza por las seis estaciones para ver cada matriz y cada lectura por columnas.
 

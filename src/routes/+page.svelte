@@ -4,6 +4,9 @@
 	import {
 		buildRun,
 		validate,
+		MESSAGE_LIMIT,
+		KEY_MIN,
+		KEY_MAX,
 		type CipherRun,
 		type Field,
 		type Pass
@@ -40,10 +43,11 @@
 	let timers: ReturnType<typeof setTimeout>[] = [];
 
 	const validation = $derived(validate({ message, key1, key2 }));
-	const normalizedLength = $derived(validation.message.value.length);
+	const messageLength = $derived(validation.message.length);
 	const currentPass = $derived(step === 3 ? run?.pass1 : step === 5 ? run?.pass2 : null);
 	const readColumns = $derived(currentPass ? currentPass.order.slice(0, readCount) : []);
 	const activeReadColumn = $derived(currentPass ? (currentPass.order[readCount] ?? null) : null);
+	// Text revealed so far, read column by column in key order.
 	const readText = $derived(
 		currentPass
 			? currentPass.order
@@ -98,6 +102,7 @@
 	}
 
 	function beginRead(pass: Pass): void {
+		// Animate the key-order read; reduced-motion users see the whole pass at once.
 		readCount = 0;
 		const total = pass.order.length;
 		if (reducedMotion || total === 0) {
@@ -180,7 +185,8 @@
 
 	async function loadExample(): Promise<void> {
 		clearTimers();
-		message = 'ATACAREMOS AL AMANECER';
+		message =
+			'¡Atención, compañía! El convoy llega al amanecer: 3 camiones, 12 cajas y víveres. ¿Están listos? ¡Nadie retrocede! Queda el 50% del camino.';
 		key1 = 'PERU';
 		key2 = 'CLAVE';
 		attempted = false;
@@ -258,8 +264,8 @@
 				entrar. Dos claves, dos pasadas, un criptograma.
 			</p>
 			<dl class="masthead-specs">
-				<div><dt>Entrada</dt><dd>400 letras</dd></div>
-				<div><dt>Claves</dt><dd>2–16</dd></div>
+				<div><dt>Entrada</dt><dd>{MESSAGE_LIMIT} caracteres</dd></div>
+				<div><dt>Claves</dt><dd>{KEY_MIN}–{KEY_MAX}</dd></div>
 				<div><dt>Pasadas</dt><dd>02</dd></div>
 			</dl>
 		</div>
@@ -276,8 +282,8 @@
 				<div class="field">
 					<div class="field-head">
 						<label for="message">Mensaje claro</label>
-						<span class="counter" class:is-over={normalizedLength > 400}>
-							{normalizedLength}/400
+						<span class="counter" class:is-over={messageLength > MESSAGE_LIMIT}>
+							{messageLength}/{MESSAGE_LIMIT}
 						</span>
 					</div>
 					<textarea
@@ -289,12 +295,12 @@
 						rows="4"
 						autocomplete="off"
 						spellcheck="false"
-						placeholder="ATACAREMOS AL AMANECER"
+						placeholder="¡Atención, compañía! El convoy llega al amanecer: 3 camiones, 12 cajas y víveres. ¿Están listos? ¡Nadie retrocede! Queda el 50% del camino."
 						aria-invalid={fieldError('message')}
 						aria-describedby="message-hint"
 					></textarea>
 					<p id="message-hint" class="field-hint">
-						Solo A–Z. El resto se normaliza.
+						Se conservan mayúsculas, espacios, tildes y signos. Sin saltos de línea.
 					</p>
 					{#if fieldError('message')}<span class="field-flag">Revisar</span>{/if}
 				</div>
@@ -313,10 +319,11 @@
 							autocomplete="off"
 							spellcheck="false"
 							placeholder="PERU"
+							autocapitalize="none"
 							aria-invalid={fieldError('key1')}
 							aria-describedby="key1-hint"
 						/>
-						<p id="key1-hint" class="field-hint">2–16 letras</p>
+						<p id="key1-hint" class="field-hint">{KEY_MIN}–{KEY_MAX} caracteres.</p>
 						{#if fieldError('key1')}<span class="field-flag">Revisar</span>{/if}
 					</div>
 
@@ -333,10 +340,11 @@
 							autocomplete="off"
 							spellcheck="false"
 							placeholder="CLAVE"
+							autocapitalize="none"
 							aria-invalid={fieldError('key2')}
 							aria-describedby="key2-hint"
 						/>
-						<p id="key2-hint" class="field-hint">2–16 letras</p>
+						<p id="key2-hint" class="field-hint">{KEY_MIN}–{KEY_MAX} caracteres.</p>
 						{#if fieldError('key2')}<span class="field-flag">Revisar</span>{/if}
 					</div>
 				</div>
@@ -418,7 +426,7 @@
 							{#each ['P', 'E', 'R', 'U'] as letter, column}
 								<span class="ghost-key" style="--col: {column}">{letter}</span>
 							{/each}
-							{#each 'ATACAREMOSALAMANECER'.split('') as letter, index}
+							{#each 'ATENCIONCOMPANIAELCO'.split('') as letter, index}
 								<span
 									class="ghost-cell"
 									style="--i: {index}; --col: {index % 4}; --row: {Math.floor(index / 4)}"
@@ -443,22 +451,10 @@
 
 							<div class="prep-grid">
 								<article class="paper-block">
-									<p class="micro">Texto normalizado</p>
+									<p class="micro">Texto original</p>
 									<p class="normalized-text">{run.message.value}</p>
 									<div class="prep-stats">
-										<span>{run.message.value.length} letras</span>
-										{#if run.message.dropped.length}
-											<span>
-												{run.message.dropped.length}
-												{run.message.dropped.length === 1 ? 'descartado' : 'descartados'}
-											</span>
-										{/if}
-										{#if run.message.folded.length}
-											<span>
-												{run.message.folded.length}
-												{run.message.folded.length === 1 ? 'plegado' : 'plegados'}
-											</span>
-										{/if}
+										<span>{run.message.length} caracteres</span>
 									</div>
 								</article>
 
@@ -473,7 +469,7 @@
 													rangos {run.pass1.ranks.join(' · ')} ·
 													<span class="key-order"
 														>lectura
-														{run.pass1.order.map((index) => run!.key1.value[index]).join(' · ')}</span
+														{run.pass1.order.map((index) => run!.pass1.keyChars[index]).join(' · ')}</span
 													>
 												</span>
 											</dd>
@@ -486,7 +482,7 @@
 													rangos {run.pass2.ranks.join(' · ')} ·
 													<span class="key-order"
 														>lectura
-														{run.pass2.order.map((index) => run!.key2.value[index]).join(' · ')}</span
+														{run.pass2.order.map((index) => run!.pass2.keyChars[index]).join(' · ')}</span
 													>
 												</span>
 											</dd>
@@ -508,8 +504,8 @@
 
 							<div class="formula-strip">
 								<span>n = {run.pass1.width}</span>
-								<span>m = ⌈{run.message.value.length} / {run.pass1.width}⌉ = {run.pass1.height}</span>
-								<span>relleno = {run.pass1.padding}</span>
+								<span>m = ⌈{run.message.length} / {run.pass1.width}⌉ = {run.pass1.height}</span>
+								<span>resto = {run.pass1.length % run.pass1.width}</span>
 							</div>
 						{:else if step === 3}
 							<header class="stage-heading">
@@ -561,7 +557,7 @@
 							</header>
 
 							<div class="source-strip">
-								<span class="micro">Entrada C1 · {run.pass1.output.length} letras</span>
+								<span class="micro">Entrada C1 · {run.pass1.length} caracteres</span>
 								<code>{run.pass1.output}</code>
 							</div>
 
@@ -573,8 +569,8 @@
 
 							<div class="formula-strip">
 								<span>n = {run.pass2.width}</span>
-								<span>m = ⌈{run.pass1.output.length} / {run.pass2.width}⌉ = {run.pass2.height}</span>
-								<span>relleno = {run.pass2.padding}</span>
+								<span>m = ⌈{run.pass1.length} / {run.pass2.width}⌉ = {run.pass2.height}</span>
+								<span>resto = {run.pass2.length % run.pass2.width}</span>
 							</div>
 						{:else if step === 5}
 							<header class="stage-heading">
@@ -801,7 +797,6 @@
 	.key-grid input {
 		font-weight: 700;
 		letter-spacing: 0.1em;
-		text-transform: uppercase;
 	}
 
 	.field input::placeholder,
@@ -1163,6 +1158,7 @@
 	.normalized-text {
 		margin-top: 0.55rem;
 		overflow-wrap: anywhere;
+		white-space: pre-wrap;
 		font-family: var(--font-mono);
 		font-size: clamp(1rem, 2vw, 1.35rem);
 		font-weight: 700;
@@ -1178,12 +1174,6 @@
 		font-size: 0.68rem;
 		letter-spacing: 0.04em;
 		color: var(--ink-soft);
-	}
-
-	.prep-stats span + span::before {
-		content: '·';
-		margin-right: 0.5rem;
-		color: var(--rule-strong);
 	}
 
 	.key-readout {
@@ -1222,6 +1212,7 @@
 		font-size: 1.1rem;
 		font-weight: 700;
 		letter-spacing: 0.1em;
+		white-space: pre-wrap;
 	}
 
 	.key-meta {
@@ -1233,7 +1224,7 @@
 	}
 
 	.key-order {
-		white-space: nowrap;
+		white-space: pre-wrap;
 	}
 
 	.formula-strip,
@@ -1264,6 +1255,7 @@
 
 	.source-strip code {
 		overflow-wrap: anywhere;
+		white-space: pre-wrap;
 		font-size: 0.76rem;
 		line-height: 1.5;
 		color: var(--ink);
@@ -1331,6 +1323,7 @@
 
 	.chunk code {
 		overflow-wrap: anywhere;
+		white-space: pre-wrap;
 		font-size: 0.82rem;
 		font-weight: 700;
 		line-height: 1.4;
@@ -1354,6 +1347,7 @@
 		min-height: 2.6rem;
 		margin-top: 0.35rem;
 		overflow-wrap: anywhere;
+		white-space: pre-wrap;
 		font-size: 0.85rem;
 		font-weight: 700;
 		line-height: 1.55;

@@ -17,8 +17,9 @@
 		readColumns = []
 	}: Props = $props();
 
-	function isPadding(index: number): boolean {
-		return index >= pass.input.length;
+	function isEmpty(index: number): boolean {
+		// Display-only padding: the final row can have fewer real characters.
+		return index >= pass.length;
 	}
 
 	function cellDelay(index: number): number {
@@ -36,10 +37,8 @@
 		<h3>{label}</h3>
 		<p class="matrix-meta">
 			{pass.width} columnas · {pass.height} filas
-			{#if pass.padding > 0}
-				<br />
-				<span class="pad-count">{pass.padding} de relleno</span>
-			{/if}
+			<br />
+			<span class="no-pad">sin relleno</span>
 		</p>
 	</header>
 
@@ -53,7 +52,7 @@
 			<thead>
 				<tr>
 					<th class="corner" scope="col"><span>F</span><span>C</span></th>
-					{#each pass.key as letter, column (column)}
+					{#each pass.keyChars as letter, column (column)}
 						<th
 							scope="col"
 							class:is-active={activeColumn === column}
@@ -77,10 +76,10 @@
 							<td
 								class:is-active={activeColumn === column}
 								class:is-read={readColumns.includes(column)}
-								class:is-pad={isPadding(index)}
+								class:is-empty={isEmpty(index)}
 								style="--delay: {cellDelay(index)}ms"
 							>
-								{#if isPadding(index)}<span class="sr-only">relleno </span>{/if}{char}
+								{#if isEmpty(index)}<span class="sr-only">hueco </span>{/if}{char}
 							</td>
 						{/each}
 					</tr>
@@ -98,7 +97,7 @@
 					class:is-active={activeColumn === column}
 					class:is-read={readColumns.includes(column)}
 				>
-					<b>{position + 1}</b>{pass.key[column]}
+					<b>{position + 1}</b>{pass.keyChars[column]}
 				</span>
 			{/each}
 		</div>
@@ -141,8 +140,8 @@
 		color: var(--ink-soft);
 	}
 
-	.pad-count {
-		color: var(--vermilion-ink);
+	.no-pad {
+		color: var(--plum);
 		font-weight: 700;
 	}
 
@@ -262,10 +261,8 @@
 		font-weight: 700;
 	}
 
-	tbody td.is-pad {
-		color: var(--vermilion-ink);
-		text-decoration: underline dotted currentColor;
-		text-underline-offset: 3px;
+	tbody td.is-empty {
+		background: var(--paper-deep);
 	}
 
 	tbody td.is-read:not(.is-active) {
@@ -279,7 +276,7 @@
 		font-weight: 700;
 	}
 
-	tbody td.is-active.is-pad {
+	tbody td.is-active.is-empty {
 		color: var(--mustard);
 	}
 
@@ -311,7 +308,6 @@
 		border: 1px solid var(--rule);
 		font-size: 0.76rem;
 		line-height: 1;
-		text-transform: uppercase;
 		transition:
 			background-color 140ms ease,
 			color 140ms ease,

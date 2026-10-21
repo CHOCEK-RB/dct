@@ -14,7 +14,8 @@
 	let copyTimer: ReturnType<typeof setTimeout> | undefined;
 
 	async function copyCipher(): Promise<void> {
-		const text = run.groups.join(' ');
+		// Copy the exact continuous ciphertext, not the visual five-character blocks.
+		const text = run.final;
 		try {
 			if (!navigator.clipboard?.writeText) throw new Error('Clipboard no disponible');
 			await navigator.clipboard.writeText(text);
@@ -48,6 +49,10 @@
 			{/each}
 		</p>
 	</div>
+	<p class="ticket-hint">
+		Los bloques son solo visuales: se copia el texto continuo, con los espacios que forman parte
+		del mensaje.
+	</p>
 
 	<div class="result-actions">
 		<button type="button" class="btn btn-primary" onclick={copyCipher}>
@@ -66,16 +71,8 @@
 
 	<dl class="result-stats">
 		<div>
-			<dt>Letras</dt>
-			<dd>{run.final.length}</dd>
-		</div>
-		<div>
-			<dt>Relleno K1</dt>
-			<dd>{run.pass1.padding} X</dd>
-		</div>
-		<div>
-			<dt>Relleno K2</dt>
-			<dd>{run.pass2.padding} X</dd>
+			<dt>Caracteres</dt>
+			<dd>{run.message.length}</dd>
 		</div>
 		<div>
 			<dt>Claves</dt>
@@ -155,8 +152,16 @@
 		display: inline-block;
 		padding-bottom: 0.15rem;
 		border-bottom: 2px solid var(--ink);
+		white-space: pre-wrap;
 		animation: group-in 260ms both;
 		animation-delay: calc(var(--i) * 60ms);
+	}
+
+	.ticket-hint {
+		margin: -0.5rem 0 0;
+		font-size: 0.68rem;
+		line-height: 1.45;
+		color: var(--ink-soft);
 	}
 
 	.result-actions {
@@ -175,7 +180,7 @@
 
 	.result-stats {
 		display: grid;
-		grid-template-columns: repeat(4, minmax(0, 1fr));
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 		margin: 0;
 		border-top: 2px solid var(--ink);
 		border-bottom: 1px solid var(--ink);
@@ -209,24 +214,6 @@
 		font-size: 1.02rem;
 		font-weight: 700;
 		line-height: 1.2;
-	}
-
-	@media (max-width: 700px) {
-		.result-stats {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-		}
-
-		.result-stats div:nth-child(2) {
-			border-right: 0;
-		}
-
-		.result-stats div:nth-child(3) {
-			border-top: 1px dotted var(--rule);
-			padding-left: 0;
-		}
-
-		.result-stats div:nth-child(4) {
-			border-top: 1px dotted var(--rule);
-		}
+		white-space: pre-wrap;
 	}
 </style>
