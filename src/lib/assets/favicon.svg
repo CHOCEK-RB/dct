@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+	<title>Transposición columnar doble</title>
+	<rect width="32" height="32" fill="#F2EADB" />
+	<rect x="2" y="2" width="28" height="28" fill="none" stroke="#17130F" stroke-width="2" />
+	<rect x="4" y="4" width="24" height="24" fill="none" stroke="#17130F" stroke-width="1.2" />
+	<path d="M12 4v24M20 4v24M4 12h24M4 20h24" stroke="#17130F" stroke-width="1" />
+	<rect x="12" y="12" width="8" height="8" fill="#C84224" />
+</svg>
